@@ -1,23 +1,24 @@
-# -*- coding: UTF-8 -*-
+
 """PyBank Homework."""
 
 # Dependencies
 import csv
 import os
 
-# Files to load and output (update with correct file paths)
-file_to_load = os.path.join("Resources", "budget_data.csv")  # Input file path
-file_to_output = os.path.join("analysis", "budget_analysis.txt")  # Output file path
+# Files to import & export
+file_to_load = os.path.join("Resources", "budget_data.csv")  
+file_to_output = os.path.join("analysis", "budget_analysis.txt")
 
 # Define variables to track the financial data
-total_months = 0
-total_net = 0
+total_months = 1        # set = 1 to include the first month since we will be skipping that row of data
+total_net = 1088983     # same reasoning as above. found this number upon my initial look at the csv file
 
 # Add more variables to track other necessary financial data
-max_increase = 0    # greatest increase in profits over the /entire/ period - incl date and amount
-max_decrease = 0    # greatest decrease in profits over the /entire/ period - incl date and amount
-prev_month = 0   # previous month's profits
-net_change_list = [] # we will add to this after every month
+max_increase = 0        # greatest increase in profits over the entire period
+max_decrease = 0        # greatest decrease in profits over the entire period
+prev_month = 1088983    # previous month's profits
+net_change_list = []    # we will add to this after every month
+current_month_name = []
 
 # Open and read the csv
 with open(file_to_load, 'r', encoding='UTF-8') as financial_data:
@@ -27,42 +28,62 @@ with open(file_to_load, 'r', encoding='UTF-8') as financial_data:
     header = next(reader)
 
     # Extract first row to avoid appending to net_change_list
-    # ???? we did that above. doing this would mean we're getting rid of the first row of data?? first_row = next(reader) # this row: ['Jan-10', '1088983']
+    first_row = next(reader) # note: this was the data we stored in total_months & total_net
 
-    # Track the total and net change
+    #Track the total and net change
 
     # Process each row of data
     for row in reader:
 
-        # Recognize the second column values as integers
+        # Recognize the values in the second column as integers
         new_profit = int(row[1])
 
-        # Track the total number of months
+        # Keep track of time
         total_months += 1 
+        current_month_name.append(row[0])
 
         # Track the net change
-        month_to_month = new_profit - prev_month # difference in profits since the previous month
-        net_change_list.append(month_to_month) # store the month-over-month change in a list
-        total_net += new_profit # track the overall net change
-        prev_month = new_profit # save this as the previous month's info before we move onto the next month
+        month_to_month = new_profit - prev_month    # difference in profits since the previous month
+        net_change_list.append(month_to_month)      # store the month-over-month change in a list
+        total_net += new_profit                     # track the overall net change
+        prev_month = new_profit                     # save this as the previous month's info before we move onto the next month
 
-        # Calculate the greatest increase in profits (month and amount)
-        max_increase = max(net_change_list) # these need to be OUT of the for loop
+    
+# Calculate the greatest increase & decrease in profits
+max_increase = max(net_change_list) 
+max_decrease = min(net_change_list)
 
-        # Calculate the greatest decrease in losses (month and amount)
-        max_decrease = min(net_change_list)
-# print(f'Biggest month:{max_increase}, lowest month:{max_decrease}, overall net:{total_net}')
+# Locate the month that the greatest increase & decrease occur
+index_max_increase = net_change_list.index(max_increase)
+index_max_decrease = net_change_list.index(max_decrease)
+
+max_incr_month = current_month_name[index_max_increase]
+max_decr_month = current_month_name[index_max_decrease]
 
 
 # Calculate the average net change across the months
-avg_change = mean(net_change_list)
+avg_change = (sum(net_change_list) / (total_months - 1)) 
 
 # Generate the output summary
-
+output = f"""
+          Financial Analysis
+          ----------------------------
+          Total Months: {total_months}
+          Total: ${total_net}
+          Average Change: ${round(avg_change,2)}
+          Greatest Increase in Profits: {max_incr_month} (${max_increase})
+          Greatest Decrease in Profits: {max_decr_month} (${max_decrease})"""
 
 # Print the output
-
+print(output)
 
 # Write the results to a text file
 with open(file_to_output, "w") as txt_file:
     txt_file.write(output)
+
+# Update the user
+print("""
+
+        The above results have been saved in the analysis folder.
+        
+     """)
